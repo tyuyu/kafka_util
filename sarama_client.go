@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/config/apollo"
 	"github.com/Shopify/sarama"
 	"log"
 	"os"
@@ -39,21 +38,6 @@ func NewConsumerClient(brokers, group, topics string, oldest, verbose bool) *con
 		oldest:  oldest,
 		verbose: verbose,
 		version: "0.10.2.0", //连云端ckafka版本必须是这个，没事别乱改
-	}
-	return c
-}
-
-func NewClientWithApollo() *consumerClient {
-
-	cc, _ := apollo.GetConfig()
-
-	c := &consumerClient{
-		brokers: cc.GetStringValue("kafka.sarama.brokers", ""),
-		group:   cc.GetStringValue("kafka.sarama.group", ""),
-		topics:  cc.GetStringValue("kafka.sarama.topics", ""),
-		oldest:  cc.GetBool("kafka.sarama.oldest", true),
-		verbose: cc.GetBool("kafka.sarama.verbose", true),
-		version: cc.GetStringValue("kafka.sarama.version", "0.10.2.0"), //连云端kafka版本必须是这个，没事别乱改
 	}
 	return c
 }
@@ -150,9 +134,9 @@ func (dc *dc) Cleanup(session sarama.ConsumerGroupSession) error {
 func (dc *dc) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 
 	for message := range claim.Messages() {
-		if c, err := apollo.GetConfig(); err != nil || c.GetBool("kafka.consume.log.enable", true) {
-			log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s  \n", string(message.Value), message.Timestamp, message.Topic)
-		}
+
+		log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s  \n", string(message.Value), message.Timestamp, message.Topic)
+
 		if err := dc.handler(message); err != nil {
 			log.Println("handle message fail", err)
 		}
